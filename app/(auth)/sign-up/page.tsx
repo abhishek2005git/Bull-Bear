@@ -7,8 +7,14 @@ import SelectField from "@/components/forms/SelectField";
 import { INVESTMENT_GOALS, PREFERRED_INDUSTRIES, RISK_TOLERANCE_OPTIONS } from "@/lib/constants";
 import {CountrySelectField} from "@/components/forms/CountrySelectField";
 import FooterLink from "@/components/forms/FooterLink";
+import { signupWithEmail } from "@/lib/actions/auth.actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const Signup = () => {
+
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -19,7 +25,7 @@ const Signup = () => {
       fullName: "",
       email: "",
       password: "",
-      country: "India",
+      country: "IN",
       investmentGoals: "",
       riskTolerance: "Medium",
       preferredIndustry: "Technology",
@@ -31,9 +37,19 @@ const Signup = () => {
 
   const onSubmit = async(data: SignUpFormData) => {
     try {
-      console.log(data);
+      //console.log(data);
+      const result = await signupWithEmail(data);
+      if(result.success){
+        toast.success(result.message);
+        router.push('/');
+      }
+
+
     } catch (error) {
       console.log(error);
+      toast.error('Sign Up failed', {
+        description: error instanceof Error ? error.message : 'Failed to create an account',
+      });
     }
   }
 
@@ -48,7 +64,7 @@ const Signup = () => {
         placeholder='John Doe'
         register={register}
         error={errors.fullName}
-        validation={{ require: 'Full Name is required', minLength: 2}}
+        validation={{ required: 'Full Name is required', minLength: 2}}
       
       />
       
@@ -58,10 +74,15 @@ const Signup = () => {
         placeholder='contact@gmail.com'
         register={register}
         error={errors.email}
-        validation={{ require: 'Email address is required', pattern: /^\w+@\w+\.\w+$/
-      }}
-      
+        validation={{
+          required: 'Email address is required',
+          pattern: {
+            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+            message: 'Invalid email address',
+          },
+        }}
       />
+
 
       <InputField
         name='password'
@@ -70,16 +91,16 @@ const Signup = () => {
         placeholder='Enter a strong password'
         register={register}
         error={errors.password}
-        validation={{ require: 'Password is required', minLength: 5}}
+        validation={{ required: 'Password is required', minLength: 5}}
       
       />
 
       <CountrySelectField
-        // name="country"
-        // label="Country"
-        // control={control}
-        // error={errors.country}
-        // required
+        name="country"
+        label="Country"
+        control={control}
+        error={errors.country}
+        required
       />
       <p className="text-sm text-gray-500">Helps us show market data and news relevant to you</p>
 
