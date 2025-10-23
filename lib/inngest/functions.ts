@@ -37,7 +37,7 @@ export const sendSignUpEmail = inngest.createFunction(
         "Thanks for joining Signalist. You now have the tools to track markets and make smarter moves.";
 
       // You can add your actual email sending logic here using `introText`
-      console.log("Generated intro:", introText);
+      //console.log("Generated intro:", introText);
 
       const { data: { email, name } } = event;
 

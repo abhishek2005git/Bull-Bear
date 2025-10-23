@@ -37,7 +37,7 @@ const Signup = () => {
 
   const onSubmit = async(data: SignUpFormData) => {
     try {
-      console.log(data);
+      //console.log(data);
       const result = await signupWithEmail(data);
       if(result.success){
         toast.success(result.message);
@@ -74,10 +74,15 @@ const Signup = () => {
         placeholder='contact@gmail.com'
         register={register}
         error={errors.email}
-        validation={{ required: 'Email address is required', pattern: /^\w+@\w+\.\w+$/
-      }}
-      
+        validation={{
+          required: 'Email address is required',
+          pattern: {
+            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+            message: 'Invalid email address',
+          },
+        }}
       />
+
 
       <InputField
         name='password'
