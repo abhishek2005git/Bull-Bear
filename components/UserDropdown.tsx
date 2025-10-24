@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,17 +12,45 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button'
-import { LogOut } from 'lucide-react'
+import { LogOut, UserMinus } from 'lucide-react'
 import NavItems from './NavItems'
-import { signOut } from '@/lib/actions/auth.actions'
+import { signOut, deleteAccount } from '@/lib/actions/auth.actions'
 
 const UserDropdown = ({ user }: { user: User }) => {
 
   const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSignOut = async() => {
     await signOut();
     router.push("/sign-in");
+  }
+
+  const handleDeleteAccount = async() => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone. All your data, watchlists, and alerts will be permanently deleted.'
+    );
+    
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    
+    try {
+      const result = await deleteAccount();
+      
+      if (result.success) {
+        alert('Account deleted successfully');
+        router.push("/sign-up");
+      } else {
+        alert(`Failed to delete account: ${result.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('An error occurred while deleting your account. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
 
@@ -62,6 +90,15 @@ const UserDropdown = ({ user }: { user: User }) => {
         >
           <LogOut className='mr-2 h-4 w-4 hidden sm:block' />
           Logout
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className='bg-gray-600' />
+        <DropdownMenuItem 
+          className='text-gray-100 text-md font-medium focus:bg-transparent focus:text-red-500 transition-colors cursor-pointer'
+          onClick={handleDeleteAccount}
+          disabled={isDeleting}
+        >
+          <UserMinus className='mr-2 h-4 w-4 hidden sm:block ' />
+          {isDeleting ? 'Deleting...' : 'Delete Account'}
         </DropdownMenuItem>
         <DropdownMenuSeparator className='bg-gray-600 hidden sm:block' />
         <nav className="sm:hidden">
