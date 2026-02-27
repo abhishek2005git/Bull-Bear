@@ -131,9 +131,10 @@ const SearchCommand = ({
                           {stock.symbol} | {stock.exchange} | {stock.type}
                         </div>
                       </div>
+                      <Star />
                     </Link>
 
-                    <Star />
+                    
                   </li>
                 ))}
               </ul>

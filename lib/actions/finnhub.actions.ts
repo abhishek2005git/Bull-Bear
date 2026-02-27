@@ -6,9 +6,16 @@ import { POPULAR_STOCK_SYMBOLS } from '@/lib/constants';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const NEXT_PUBLIC_FINNHUB_API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY;
+const getFinnhubToken = () => process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
 
 type FetchOptions = {
   revalidateSeconds?: number;
+};
+
+// Minimal Finnhub `/stock/profile2` response shape we rely on.
+type StockProfile2 = ProfileData & {
+  ticker?: string;
+  exchange?: string;
 };
 
 export const fetchJSON = async <T>(
@@ -31,6 +38,55 @@ export const fetchJSON = async <T>(
   return response.json();
 };
 
+export const getQuote = cache(async (symbol: string): Promise<QuoteData | null> => {
+  try {
+    const token = getFinnhubToken();
+    if (!token) return null;
+    const upper = symbol.trim().toUpperCase();
+    if (!upper) return null;
+
+    const url = `${FINNHUB_BASE_URL}/quote?symbol=${encodeURIComponent(upper)}&token=${token}`;
+    // Quotes should be fresh; avoid caching long
+    const data = await fetchJSON<QuoteData>(url, { revalidateSeconds: 20 });
+    return data ?? null;
+  } catch (e) {
+    console.error('Error fetching quote:', symbol, e);
+    return null;
+  }
+});
+
+export const getProfile = cache(async (symbol: string): Promise<ProfileData | null> => {
+  try {
+    const token = getFinnhubToken();
+    if (!token) return null;
+    const upper = symbol.trim().toUpperCase();
+    if (!upper) return null;
+
+    const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${encodeURIComponent(upper)}&token=${token}`;
+    const data = await fetchJSON<ProfileData>(url, { revalidateSeconds: 3600 });
+    return data ?? null;
+  } catch (e) {
+    console.error('Error fetching profile2:', symbol, e);
+    return null;
+  }
+});
+
+export const getBasicFinancials = cache(async (symbol: string): Promise<FinancialsData | null> => {
+  try {
+    const token = getFinnhubToken();
+    if (!token) return null;
+    const upper = symbol.trim().toUpperCase();
+    if (!upper) return null;
+
+    const url = `${FINNHUB_BASE_URL}/stock/metric?symbol=${encodeURIComponent(upper)}&metric=all&token=${token}`;
+    const data = await fetchJSON<FinancialsData>(url, { revalidateSeconds: 3600 });
+    return data ?? null;
+  } catch (e) {
+    console.error('Error fetching financials metrics:', symbol, e);
+    return null;
+  }
+});
+
 export const getNews = async (
   symbols?: string[]
 ): Promise<MarketNewsArticle[]> => {
@@ -45,7 +101,7 @@ export const getNews = async (
 
       if (cleanedSymbols.length === 0) {
         // Fallback to general news if no valid symbols
-        return await fetchGeneralNews(from, to);
+        return await fetchGeneralNews();
       }
 
       const articles: MarketNewsArticle[] = [];
@@ -89,17 +145,14 @@ export const getNews = async (
     }
 
     // No symbols provided, fetch general market news
-    return await fetchGeneralNews(from, to);
+    return await fetchGeneralNews();
   } catch (error) {
     console.error('Error in getNews:', error);
     throw new Error('Failed to fetch news');
   }
 };
 
-const fetchGeneralNews = async (
-  from: string,
-  to: string
-): Promise<MarketNewsArticle[]> => {
+const fetchGeneralNews = async (): Promise<MarketNewsArticle[]> => {
   try {
     const url = `${FINNHUB_BASE_URL}/news?category=general&token=${NEXT_PUBLIC_FINNHUB_API_KEY}`;
     const news = await fetchJSON<RawNewsArticle[]>(url);
@@ -135,7 +188,7 @@ const fetchGeneralNews = async (
 
 export const searchStocks = cache(async (query?: string): Promise<StockWithWatchlistStatus[]> => {
   try {
-    const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
+    const token = getFinnhubToken();
     if (!token) {
       // If no token, log and return empty to avoid throwing per requirements
       console.error('Error in stock search:', new Error('FINNHUB API key is not configured'));
@@ -154,11 +207,11 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
           try {
             const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${encodeURIComponent(sym)}&token=${token}`;
             // Revalidate every hour
-            const profile = await fetchJSON<any>(url, { revalidateSeconds: 3600 });
-            return { sym, profile } as { sym: string; profile: any };
+            const profile: StockProfile2 | null = await fetchJSON<StockProfile2>(url, { revalidateSeconds: 3600 });
+            return { sym, profile };
           } catch (e) {
             console.error('Error fetching profile2 for', sym, e);
-            return { sym, profile: null } as { sym: string; profile: any };
+            return { sym, profile: null };
           }
         })
       );
@@ -178,7 +231,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
           // We don't include exchange in FinnhubSearchResult type, so carry via mapping later using profile
           // To keep pipeline simple, attach exchange via closure map stage
           // We'll reconstruct exchange when mapping to final type
-          (r as any).__exchange = exchange; // internal only
+          (r as FinnhubSearchResult & { __exchange?: string }).__exchange = exchange; // internal only
           return r;
         })
         .filter((x): x is FinnhubSearchResult => Boolean(x));
@@ -193,7 +246,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
         const upper = (r.symbol || '').toUpperCase();
         const name = r.description || upper;
         const exchangeFromDisplay = (r.displaySymbol as string | undefined) || undefined;
-        const exchangeFromProfile = (r as any).__exchange as string | undefined;
+        const exchangeFromProfile = (r as FinnhubSearchResult & { __exchange?: string }).__exchange;
         const exchange = exchangeFromDisplay || exchangeFromProfile || 'US';
         const type = r.type || 'Stock';
         const item: StockWithWatchlistStatus = {
