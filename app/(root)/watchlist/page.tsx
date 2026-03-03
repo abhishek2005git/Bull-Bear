@@ -5,6 +5,7 @@ import { getWatchlistByEmail } from '@/lib/actions/watchlist.actions'
 import { getBasicFinancials, getNews, getProfile, getQuote, searchStocks } from '@/lib/actions/finnhub.actions'
 import { formatChangePercent, formatMarketCapValue, formatPrice } from '@/lib/utils'
 import { getAlertsByEmail } from '@/lib/actions/alert.actions'
+import SearchCommand from '@/components/SearchCommand'
 
 const WatchlistPage = async () => {
   const session = await auth.api.getSession({ headers: await headers() })

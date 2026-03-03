@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react";
+import type { Alert } from "@/types/alert"; // adjust path as needed
 import {
   getAlertText,
   formatPrice,
   formatChangePercent,
   getChangeColorClass,
-} from "@/lib/utils"
-
+} from "@/lib/utils";
 type AlertsListPropsInternal = {
-  alertData: Alert[] | undefined
-  onEdit: (alert: Alert) => void
-  onDelete: (id: string) => void
-  deletingId?: string | null
-}
+  alertData: Alert[] | undefined;
+  onEdit: (alert: Alert) => void;
+  onDelete: (id: string) => void;
+  deletingId?: string | null;
+};
 
 const getFrequencyLabel = (alert: Alert) => {
   // Simple placeholder mapping to mimic the UI pill
-  return alert.alertType === "upper" ? "Once per day" : "Once per hour"
-}
+  return alert.alertType === "upper" ? "Once per day" : "Once per hour";
+};
 
 const AlertsList = ({
   alertData,
@@ -26,7 +26,7 @@ const AlertsList = ({
   onDelete,
   deletingId,
 }: AlertsListPropsInternal) => {
-  const alerts = alertData ?? []
+  const alerts = alertData ?? [];
 
   if (!alerts.length) {
     return (
@@ -35,19 +35,19 @@ const AlertsList = ({
           Alerts UI is ready — create your first price alert to get started.
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="alert-list">
       {alerts.map((alert) => {
-        const price = formatPrice(alert.currentPrice ?? alert.threshold)
+        const price = formatPrice(alert.currentPrice ?? alert.threshold);
         const change =
           typeof alert.changePercent === "number"
             ? formatChangePercent(alert.changePercent)
-            : ""
-        const changeClass = getChangeColorClass(alert.changePercent)
-        const initial = alert.company?.charAt(0)?.toUpperCase() || "•"
+            : "";
+        const changeClass = getChangeColorClass(alert.changePercent);
+        const initial = alert.company?.charAt(0)?.toUpperCase() || "•";
 
         return (
           <div key={alert.id} className="alert-item">
@@ -59,9 +59,7 @@ const AlertsList = ({
                 <div>
                   <div className="alert-company-row">
                     <span className="alert-company-name">{alert.company}</span>
-                    <span className="alert-company-symbol">
-                      {alert.symbol}
-                    </span>
+                    <span className="alert-company-symbol">{alert.symbol}</span>
                   </div>
                   <div className="alert-price-row">
                     <span className="alert-price-main">{price}</span>
@@ -85,9 +83,7 @@ const AlertsList = ({
 
             <div className="mb-3">
               <div className="alert-name">Alert</div>
-              <div className="text-sm text-gray-300">
-                {getAlertText(alert)}
-              </div>
+              <div className="text-sm text-gray-300">{getAlertText(alert)}</div>
             </div>
 
             <div className="alert-actions">
@@ -105,11 +101,10 @@ const AlertsList = ({
               </button>
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
-}
+  );
+};
 
-export default AlertsList
-
+export default AlertsList;

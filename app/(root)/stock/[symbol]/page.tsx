@@ -9,6 +9,7 @@ import {
   COMPANY_FINANCIALS_WIDGET_CONFIG,
 } from '@/lib/constants'
 import { getWatchlistSymbolsByEmail } from '@/lib/actions/watchlist.actions'
+import { getProfile } from '@/lib/actions/finnhub.actions'
 import { auth } from '@/lib/better-auth/auth'
 import { headers } from 'next/headers'
 
