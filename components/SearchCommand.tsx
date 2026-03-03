@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import {
   CommandDialog,
   CommandEmpty,
-  CommandGroup,
+
   CommandInput,
-  CommandItem,
+
   CommandList,
 } from '@/components/ui/command'
 import { Button } from './ui/button'
@@ -14,6 +14,8 @@ import { Loader2, Star, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { searchStocks } from '@/lib/actions/finnhub.actions'
 import { useDebounce } from '@/hooks/UseDebounce'
+import { addToWatchlist, removeFromWatchlist } from '@/lib/actions/watchlist.actions'
+import { toast } from 'sonner'
 
 interface SearchCommandProps {
   renderAs?: 'button' | 'text'
@@ -30,6 +32,7 @@ const SearchCommand = ({
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
   const [stocks, setStocks] = useState<StockWithWatchlistStatus[]>(initialStocks);
+  const [updatingSymbol, setUpdatingSymbol] = useState<string | null>(null);
 
   const isSearchMode = !!searchTerm.trim()
   const displayStocks = isSearchMode ? stocks : stocks?.slice(0, 10)
@@ -67,6 +70,41 @@ const SearchCommand = ({
   useEffect(() => {
     debounceSearch()
   }, [searchTerm])
+
+  const handleToggleWatchlist = async (stock: StockWithWatchlistStatus) => {
+    setUpdatingSymbol(stock.symbol)
+    try {
+      if (stock.isInWatchlist) {
+        await removeFromWatchlist(stock.symbol)
+        toast.success(`${stock.symbol} removed from watchlist`)
+        setStocks((prev) =>
+          prev.map((s) =>
+            s.symbol === stock.symbol ? { ...s, isInWatchlist: false } : s
+          )
+        )
+      } else {
+        const result = await addToWatchlist({
+          symbol: stock.symbol,
+          company: stock.name,
+        })
+        toast.success(
+          (result && 'message' in result && typeof result.message === 'string'
+            ? result.message
+            : `${stock.symbol} added to watchlist`)
+        )
+        setStocks((prev) =>
+          prev.map((s) =>
+            s.symbol === stock.symbol ? { ...s, isInWatchlist: true } : s
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Error updating watchlist from search:', error)
+      toast.error('Failed to update watchlist')
+    } finally {
+      setUpdatingSymbol(null)
+    }
+  }
 
   const handleSelectStock = () => {
     //console.log('Selected stock:', value)
@@ -116,25 +154,48 @@ const SearchCommand = ({
               </div>
               <ul>
                 {displayStocks?.map((stock) => (
-                  <li key={stock.symbol} className="search-item px-3 py-2 hover:bg-accent rounded-md">
+                  <li
+                    key={stock.symbol}
+                    className="search-item px-3 py-2 hover:bg-accent rounded-md flex items-center justify-between"
+                  >
                     <Link
                       href={`/stock/${stock.symbol}`}
                       onClick={handleSelectStock}
-                      className="search-item-link block"
+                      className="search-item-link flex items-center gap-3 flex-1"
                     >
-                      <TrendingUp  className='h-4 w-4 text-gray-500'/>
+                      <TrendingUp className="h-4 w-4 text-gray-500" />
                       <div className="flex-1">
-                        <div className='search-item-name'>
+                        <div className="search-item-name">
                           {stock.name}
                         </div>
-                        <div className='text-sm text-gray-500'>
+                        <div className="text-sm text-gray-500">
                           {stock.symbol} | {stock.exchange} | {stock.type}
                         </div>
                       </div>
-                      <Star />
                     </Link>
-
-                    
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleToggleWatchlist(stock)
+                      }}
+                      disabled={updatingSymbol === stock.symbol}
+                      className="ml-3 p-1 rounded-full hover:bg-gray-700/60 disabled:opacity-50"
+                      aria-label={
+                        stock.isInWatchlist
+                          ? 'Remove from watchlist'
+                          : 'Add to watchlist'
+                      }
+                    >
+                      <Star
+                        className={`h-4 w-4 ${
+                          stock.isInWatchlist
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-gray-500'
+                        }`}
+                      />
+                    </button>
                   </li>
                 ))}
               </ul>

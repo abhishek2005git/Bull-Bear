@@ -353,10 +353,10 @@
     @apply px-6 py-8 text-center text-gray-500/50;
   }
   .alert-item {
-    @apply p-4 rounded-lg bg-gray-700 border border-gray-600;
+    @apply p-4 rounded-2xl bg-gray-800 border border-gray-700 shadow-sm;
   }
   .alert-name {
-    @apply mb-2 text-lg text-yellow-500 font-semibold;
+    @apply text-xs font-semibold uppercase tracking-wide text-gray-400;
   }
   .alert-details {
     @apply flex border-b pb-3 items-center justify-between gap-3 mb-2;
@@ -368,13 +368,43 @@
     @apply text-gray-100 font-bold;
   }
   .alert-actions {
-    @apply flex items-end justify-between;
+    @apply flex items-center justify-between mt-2;
   }
   .alert-update-btn {
     @apply text-gray-400 rounded-full bg-transparent hover:bg-green-500/15 cursor-pointer;
   }
   .alert-delete-btn {
     @apply text-gray-400 rounded-full hover:bg-red-600/15 bg-transparent cursor-pointer transition-colors;
+  }
+  .alert-logo {
+    @apply w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center border border-gray-600;
+  }
+  .alert-logo-initial {
+    @apply text-sm font-semibold text-gray-100;
+  }
+  .alert-company-row {
+    @apply flex items-center gap-2;
+  }
+  .alert-company-name {
+    @apply text-sm font-semibold text-gray-100;
+  }
+  .alert-company-symbol {
+    @apply text-xs font-medium text-gray-400;
+  }
+  .alert-price-row {
+    @apply flex items-center gap-2;
+  }
+  .alert-price-main {
+    @apply text-base font-bold text-gray-100;
+  }
+  .alert-price-change {
+    @apply text-xs font-semibold;
+  }
+  .alert-frequency-pill {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-400 text-black;
+  }
+  .alert-update-icon {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-700/60 text-gray-300 hover:text-yellow-400 hover:bg-gray-600 transition-colors;
   }
 }
 
