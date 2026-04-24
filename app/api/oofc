@@ -1,0 +1,20 @@
+  useEffect(() => {
+    const fetchStocks = async () => {
+      if (searchTerm.trim()) {
+        setLoading(true)
+        try {
+          const results = await searchStocks(searchTerm)
+          setStocks(results)
+        } catch (error) {
+          console.error('Error searching stocks:', error)
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        setStocks(initialStocks)
+      }
+    }
+
+    const debounce = setTimeout(fetchStocks, 300)
+    return () => clearTimeout(debounce)
+  }, [searchTerm, initialStocks])

@@ -16,6 +16,7 @@ if(!cached){
 }
 
 export const connectToDatabase = async() => {
+  
   if(!MONGODB_URI) throw new Error('MONDODB_URI must be set within .env');
 
   if(cached.conn) return cached.conn;
