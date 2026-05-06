@@ -12,7 +12,8 @@ import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 
 os.environ.setdefault("TF_USE_LEGACY_KERAS", "1")
-from tensorflow.keras.models import load_model
+from keras.models import load_model
+from keras.layers import LSTM
 
 from core.exceptions import ApiError
 
@@ -35,9 +36,16 @@ class PredictionResult:
     charts: dict[str, str] | None
 
 
+class PatchedLSTM(LSTM):
+    def __init__(self, **kwargs):
+        # Intercept and remove 'time_major' before initializing the layer
+        kwargs.pop('time_major', None)
+        super().__init__(**kwargs)
+
 class StockPredictionService:
     def __init__(self, model_path: str, lookback_days: int = 100, history_start_year: int = 2000):
-        self.model = load_model(model_path)
+        # Pass the patched layer into custom_objects
+        self.model = load_model(model_path, custom_objects={'LSTM': PatchedLSTM})
         self.lookback_days = lookback_days
         self.history_start_year = history_start_year
 
