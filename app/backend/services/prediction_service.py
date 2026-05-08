@@ -12,8 +12,9 @@ import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 
 os.environ.setdefault("TF_USE_LEGACY_KERAS", "1")
-from keras.models import load_model
 from keras.layers import LSTM
+from keras.models import load_model
+
 
 from core.exceptions import ApiError
 
