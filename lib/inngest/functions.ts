@@ -78,10 +78,8 @@ export const sendDailyNewsSummary = inngest.createFunction(
 
       const userNewsPromises = users.map(async (user) => {
         try {
-          // Get user's watchlist symbols
           const symbols = await getWatchlistSymbolsByEmail(user.email);
 
-          // Fetch news based on watchlist (or general news if no watchlist)
           const news = symbols.length > 0
             ? await getNews(symbols)
             : await getNews();
